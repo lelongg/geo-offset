@@ -1,0 +1,18 @@
+[package]
+name = "geo-offset"
+version = "0.1.0"
+authors = ["Gérald Lelong <gerald.lelong@easymov.fr>"]
+edition = "2018"
+
+[dependencies]
+geo = "0.12.2"
+itertools = "0.8.0"
+geo-booleanop = {git ="https://github.com/grokse/rust-geo-booleanop.git", branch="geo_types_upgrade"}
+num-traits = "0.2.8"
+
+[dev-dependencies]
+serde = { version = "1.0.93", features = ["derive"] }
+serde_json = "1.0.39"
+once_cell = "0.2.1"
+data-uri-utils = "0.1.0"
+geo-svg = "0.1.2"
