@@ -1,21 +1,26 @@
 use super::*;
 use geo_booleanop::boolean::BooleanOp;
 
-#[derive(Debug, Clone)]
+/// If offset computing fails this error is returned.
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum OffsetError {
+    /// This error can be produced when manipulating edges.
     EdgeError(EdgeError),
 }
 
+/// Arcs around corners are made of 5 segments by default.
+pub const DEFAULT_ARC_SEGMENTS: u32 = 5;
+
 pub trait Offset {
+    fn offset(&self, distance: f64) -> Result<geo::MultiPolygon<f64>, OffsetError> {
+        self.offset_with_arc_segments(distance, DEFAULT_ARC_SEGMENTS)
+    }
+
     fn offset_with_arc_segments(
         &self,
         distance: f64,
         arc_segments: u32,
     ) -> Result<geo::MultiPolygon<f64>, OffsetError>;
-
-    fn offset(&self, distance: f64) -> Result<geo::MultiPolygon<f64>, OffsetError> {
-        self.offset_with_arc_segments(distance, 10)
-    }
 }
 
 impl Offset for geo::GeometryCollection<f64> {
@@ -251,7 +256,7 @@ impl Offset for geo::Point<f64> {
     }
 }
 
-pub fn create_arc(
+fn create_arc(
     vertices: &mut Vec<geo::Coordinate<f64>>,
     center: &geo::Coordinate<f64>,
     radius: f64,

@@ -1,14 +1,16 @@
 type Point = geo::Coordinate<f64>;
 
-#[derive(Debug, Clone)]
+/// This enumeration contains error cases for edges manipulation.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum EdgeError {
+    /// This error can be produced if normals of an edge of null length are computed.
+    VerticesOverlap,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Edge {
     pub current: Point,
     pub next: Point,
-}
-
-#[derive(Debug, Clone)]
-pub enum EdgeError {
-    VerticesOverlap,
 }
 
 impl Edge {
