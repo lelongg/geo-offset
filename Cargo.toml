@@ -11,11 +11,6 @@ description = "Add margin and padding to geometric shapes"
 keywords = ["geo", "polygon", "offset", "margin", "padding"]
 categories = ["algorithms"]
 
-[badges]
-is-it-maintained-issue-resolution = { repository = "lelongg/geo-offset" }
-is-it-maintained-open-issues = { repository = "lelongg/geo-offset" }
-maintenance = { status = "actively-developed" }
-
 [dependencies]
 geo = "0.12.2"
 itertools = "0.8.0"
