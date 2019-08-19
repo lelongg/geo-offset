@@ -14,13 +14,13 @@ categories = ["algorithms"]
 [dependencies]
 geo = "0.12.2"
 itertools = "0.8.0"
-geo-clipper = { path = "../geo-clipper" }
+geo-clipper = "0.1.0"
 num-traits = "0.2.8"
 
 [dev-dependencies]
-serde = { version = "1.0.94", features = ["derive"] }
+serde = { version = "1.0.99", features = ["derive"] }
 serde_json = "1.0.40"
-once_cell = "0.2.1"
+once_cell = "0.2.6"
 data-uri-utils = "0.1.0"
-geo-svg = "0.1.2"
+geo-svg = "0.2.3"
 geo-types = "0.4.3"
