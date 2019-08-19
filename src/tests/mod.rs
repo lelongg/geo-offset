@@ -26,58 +26,58 @@ fn test_point_offset() {
     let expected = geo::MultiPolygon(vec![Polygon::new(
         LineString(vec![
             Coordinate {
-                x: 0.8412535328311812,
-                y: 0.5406408174555976,
+                x: 0.841_253_532_831_181_2,
+                y: 0.540_640_817_455_597_6,
             },
             Coordinate {
-                x: 0.41541501300188644,
-                y: 0.9096319953545183,
+                x: 0.415_415_013_001_886_44,
+                y: 0.909_631_995_354_518_3,
             },
             Coordinate {
-                x: -0.142314838273285,
-                y: 0.9898214418809328,
+                x: -0.142_314_838_273_285,
+                y: 0.989_821_441_880_932_8,
             },
             Coordinate {
-                x: -0.654860733945285,
-                y: 0.7557495743542583,
+                x: -0.654_860_733_945_285,
+                y: 0.755_749_574_354_258_3,
             },
             Coordinate {
-                x: -0.9594929736144974,
-                y: 0.28173255684142967,
+                x: -0.959_492_973_614_497_4,
+                y: 0.281_732_556_841_429_67,
             },
             Coordinate {
-                x: -0.9594929736144974,
-                y: -0.28173255684142984,
+                x: -0.959_492_973_614_497_4,
+                y: -0.281_732_556_841_429_84,
             },
             Coordinate {
-                x: -0.6548607339452849,
-                y: -0.7557495743542585,
+                x: -0.654_860_733_945_284_9,
+                y: -0.755_749_574_354_258_5,
             },
             Coordinate {
-                x: -0.14231483827328523,
-                y: -0.9898214418809327,
+                x: -0.142_314_838_273_285_23,
+                y: -0.989_821_441_880_932_7,
             },
             Coordinate {
-                x: 0.41541501300188605,
-                y: -0.9096319953545186,
+                x: 0.415_415_013_001_886_05,
+                y: -0.909_631_995_354_518_6,
             },
             Coordinate {
-                x: 0.8412535328311808,
-                y: -0.5406408174555982,
+                x: 0.841_253_532_831_180_8,
+                y: -0.540_640_817_455_598_2,
             },
             Coordinate {
                 x: 1.0,
-                y: -0.000000000000001133107779529596,
+                y: -0.000_000_000_000_001_133_107_779_529_596,
             },
             Coordinate {
-                x: 0.8412535328311812,
-                y: 0.5406408174555976,
+                x: 0.841_253_532_831_181_2,
+                y: 0.540_640_817_455_597_6,
             },
         ]),
         Vec::new(),
     )]);
 
-    println!("{}", result.to_svg().and(&point.to_svg()).with_margin(10.0));
+    println!("{}", result.to_svg().and(point.to_svg()).with_margin(10.0));
     assert_eq!(expected, result);
 }
 
@@ -90,7 +90,7 @@ fn test_segment_offset() {
 
     println!(
         "{}",
-        result.to_svg().and(&segment.to_svg()).with_margin(10.0)
+        result.to_svg().and(segment.to_svg()).with_margin(10.0)
     );
 }
 
@@ -107,7 +107,7 @@ fn test_polygon_offset() {
 
     println!(
         "{}",
-        result.to_svg().and(&polygon.to_svg()).with_margin(10.0)
+        result.to_svg().and(polygon.to_svg()).with_margin(10.0)
     );
 }
 
@@ -129,10 +129,7 @@ fn test_polygon_with_hole_offset() {
 
     let result = polygon.offset(1.0).unwrap();
 
-    println!(
-        "{}",
-        result.to_svg().and(&polygon.to_svg()).with_margin(5.0)
-    );
+    println!("{}", result.to_svg().and(polygon.to_svg()).with_margin(5.0));
 }
 
 #[test]
@@ -144,7 +141,7 @@ fn test_demo_offset() {
         result
             .clone()
             .to_svg()
-            .and(&fixtures::DEMO.to_svg())
+            .and(fixtures::DEMO.to_svg())
             .with_margin(0.001)
     );
 
