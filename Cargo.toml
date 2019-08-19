@@ -14,7 +14,7 @@ categories = ["algorithms"]
 [dependencies]
 geo = "0.12.2"
 itertools = "0.8.0"
-geo-booleanop = "0.2.0"
+geo-clipper = { path = "../geo-clipper" }
 num-traits = "0.2.8"
 
 [dev-dependencies]

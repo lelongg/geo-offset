@@ -1,5 +1,5 @@
 use super::*;
-use geo_booleanop::boolean::BooleanOp;
+use geo_clipper::Clipper;
 
 /// If offset computing fails this error is returned.
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -33,7 +33,7 @@ impl Offset for geo::GeometryCollection<f64> {
         for geometry in self.0.iter() {
             let geometry_with_offset = geometry.offset_with_arc_segments(distance, arc_segments)?;
             geometry_collection_with_offset =
-                geometry_collection_with_offset.union(&geometry_with_offset);
+                geometry_collection_with_offset.union(&geometry_with_offset, 1000.0);
         }
         Ok(geometry_collection_with_offset)
     }
@@ -79,7 +79,7 @@ impl Offset for geo::MultiPolygon<f64> {
         let mut polygons = geo::MultiPolygon(Vec::new());
         for polygon in self.0.iter() {
             let polygon_with_offset = polygon.offset_with_arc_segments(distance, arc_segments)?;
-            polygons = polygons.union(&polygon_with_offset);
+            polygons = polygons.union(&polygon_with_offset, 1000.0);
         }
         Ok(polygons)
     }
@@ -98,11 +98,11 @@ impl Offset for geo::Polygon<f64> {
             .offset_with_arc_segments(distance.abs(), arc_segments)?;
 
         Ok(if distance.is_sign_positive() {
-            self.union(&exterior_with_offset)
-                .union(&interiors_with_offset)
+            self.union(&exterior_with_offset, 1000.0)
+                .union(&interiors_with_offset, 1000.0)
         } else {
-            self.difference(&exterior_with_offset)
-                .difference(&interiors_with_offset)
+            self.difference(&exterior_with_offset, 1000.0)
+                .difference(&interiors_with_offset, 1000.0)
         })
     }
 }
@@ -122,7 +122,7 @@ impl Offset for geo::MultiLineString<f64> {
             let line_string_with_offset =
                 line_string.offset_with_arc_segments(distance, arc_segments)?;
             multi_line_string_with_offset =
-                multi_line_string_with_offset.union(&line_string_with_offset);
+                multi_line_string_with_offset.union(&line_string_with_offset, 1000.0);
         }
         Ok(multi_line_string_with_offset)
     }
@@ -141,7 +141,7 @@ impl Offset for geo::LineString<f64> {
         let mut line_string_with_offset = geo::MultiPolygon(Vec::new());
         for line in self.lines() {
             let line_with_offset = line.offset_with_arc_segments(distance, arc_segments)?;
-            line_string_with_offset = line_string_with_offset.union(&line_with_offset);
+            line_string_with_offset = line_string_with_offset.union(&line_with_offset, 1000.0);
         }
 
         let line_string_with_offset = line_string_with_offset.0.iter().skip(1).fold(
@@ -152,7 +152,7 @@ impl Offset for geo::LineString<f64> {
                     .map(|polygon| vec![polygon.clone()])
                     .unwrap_or_default(),
             ),
-            |result, hole| result.difference(hole),
+            |result, hole| result.difference(hole, 1000.0),
         );
 
         Ok(line_string_with_offset)
@@ -172,34 +172,37 @@ impl Offset for geo::Line<f64> {
         let v1 = &self.start;
         let v2 = &self.end;
         let e1 = Edge::new(v1, v2);
-        let in_normal = e1.inwards_normal().map_err(OffsetError::EdgeError)?;
-        let out_normal = e1.outwards_normal().map_err(OffsetError::EdgeError)?;
-        let offsets = [
-            e1.with_offset(in_normal.x * distance, in_normal.y * distance),
-            e1.inverse_with_offset(out_normal.x * distance, out_normal.y * distance),
-        ];
 
-        let len = 2;
-        let mut vertices = Vec::new();
+        if let (Ok(in_normal), Ok(out_normal)) = (e1.inwards_normal(), e1.outwards_normal()) {
+            let offsets = [
+                e1.with_offset(in_normal.x * distance, in_normal.y * distance),
+                e1.inverse_with_offset(out_normal.x * distance, out_normal.y * distance),
+            ];
 
-        for i in 0..len {
-            let current_edge = offsets.get(i).unwrap();
-            let prev_edge = offsets.get((i + len + 1) % len).unwrap();
-            create_arc(
-                &mut vertices,
-                if i == 0 { v1 } else { v2 },
-                distance,
-                &prev_edge.next,
-                &current_edge.current,
-                arc_segments,
-                true,
-            );
+            let len = 2;
+            let mut vertices = Vec::new();
+
+            for i in 0..len {
+                let current_edge = offsets.get(i).unwrap();
+                let prev_edge = offsets.get((i + len + 1) % len).unwrap();
+                create_arc(
+                    &mut vertices,
+                    if i == 0 { v1 } else { v2 },
+                    distance,
+                    &prev_edge.next,
+                    &current_edge.current,
+                    arc_segments,
+                    true,
+                );
+            }
+
+            Ok(geo::MultiPolygon(vec![geo::Polygon::new(
+                geo::LineString(vertices),
+                vec![],
+            )]))
+        } else {
+            geo::Point::from(self.start).offset_with_arc_segments(distance, arc_segments)
         }
-
-        Ok(geo::MultiPolygon(vec![geo::Polygon::new(
-            geo::LineString(vertices),
-            vec![],
-        )]))
     }
 }
 
@@ -216,7 +219,7 @@ impl Offset for geo::MultiPoint<f64> {
         let mut multi_point_with_offset = geo::MultiPolygon(Vec::new());
         for point in self.0.iter() {
             let point_with_offset = point.offset_with_arc_segments(distance, arc_segments)?;
-            multi_point_with_offset = multi_point_with_offset.union(&point_with_offset);
+            multi_point_with_offset = multi_point_with_offset.union(&point_with_offset, 1000.0);
         }
         Ok(multi_point_with_offset)
     }
