@@ -12,7 +12,7 @@ keywords = ["geo", "polygon", "offset", "margin", "padding"]
 categories = ["algorithms"]
 
 [dependencies]
-geo = "0.12.2"
+geo = "0.14.1"
 itertools = "0.8.0"
 geo-clipper = "0.1.0"
 num-traits = "0.2.8"
