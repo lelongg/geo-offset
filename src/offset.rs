@@ -51,6 +51,12 @@ impl Offset for geo::Geometry<f64> {
             geo::Geometry::LineString(line_tring) => {
                 line_tring.offset_with_arc_segments(distance, arc_segments)
             }
+            geo::Geometry::Triangle(triangle) => triangle
+                .to_polygon()
+                .offset_with_arc_segments(distance, arc_segments),
+            geo::Geometry::Rect(rect) => rect
+                .to_polygon()
+                .offset_with_arc_segments(distance, arc_segments),
             geo::Geometry::Polygon(polygon) => {
                 polygon.offset_with_arc_segments(distance, arc_segments)
             }
