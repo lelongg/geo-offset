@@ -1,0 +1,26 @@
+version: 2
+updates:
+- package-ecosystem: cargo
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: geo
+    versions:
+    - 0.17.0
+    - 0.17.1
+    - 0.18.0
+  - dependency-name: geo-types
+    versions:
+    - 0.7.0
+    - 0.7.1
+  - dependency-name: itertools
+    versions:
+    - 0.10.0
+  - dependency-name: geo-clipper
+    versions:
+    - 0.4.0
+  - dependency-name: geo-svg
+    versions:
+    - 0.3.0
