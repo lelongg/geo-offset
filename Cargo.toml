@@ -14,7 +14,7 @@ categories = ["algorithms"]
 [dependencies]
 geo = "0.18.0"
 itertools = "0.10.0"
-geo-clipper = "0.6.0"
+geo-clipper = "0.7.1"
 num-traits = "0.2.8"
 
 [dev-dependencies]
