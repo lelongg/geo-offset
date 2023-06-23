@@ -13,7 +13,7 @@ categories = ["algorithms"]
 
 [dependencies]
 geo = "0.25.0"
-itertools = "0.10.0"
+itertools = "0.11.0"
 geo-clipper = "0.7.0"
 num-traits = "0.2.8"
 
