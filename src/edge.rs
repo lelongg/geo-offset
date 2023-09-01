@@ -1,4 +1,4 @@
-type Point = geo::Coordinate<f64>;
+type Point = geo_types::Coord<f64>;
 
 /// This enumeration contains error cases for edges manipulation.
 #[derive(Debug, Copy, Clone, PartialEq)]

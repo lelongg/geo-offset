@@ -13,12 +13,12 @@ The following example shows how to compute an inflated line.
 The [`offset`] method is provided by the [`Offset`] trait which is implemented for most [geo-types](https://docs.rs/geo-types/0.4.3/geo_types/).
 
 ```rust
-use geo_types::{Coordinate, Line};
+use geo_types::{Coord, Line};
 use geo_offset::Offset;
 
 let line = Line::new(
-    Coordinate { x: 0.0, y: 0.0 },
-    Coordinate { x: 1.0, y: 8.0 },
+    Coord { x: 0.0, y: 0.0 },
+    Coord { x: 1.0, y: 8.0 },
 );
 
 let line_with_offset = line.offset(2.0)?;
