@@ -22,7 +22,7 @@ fn test_edge() {
 #[test]
 fn test_point_offset() {
     let point = geo_types::Point::new(0.0, 0.0);
-    let result = point.offset_with_arc_segments(1.0, 5).unwrap();
+    let result = point.offset_with_arc_resolution(1.0, ArcResolution::SegmentCount(11)).unwrap();
     let expected = geo_types::MultiPolygon(vec![Polygon::new(
         LineString(vec![
             Coord {
@@ -134,7 +134,7 @@ fn test_polygon_with_hole_offset() {
 
 #[test]
 fn test_demo_offset() {
-    let result = fixtures::DEMO.offset_with_arc_segments(0.0001, 5).unwrap();
+    let result = fixtures::DEMO.offset_with_arc_resolution(0.0001, ArcResolution::SegmentCount(5)).unwrap();
 
     println!(
         "{}",
