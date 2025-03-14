@@ -9,30 +9,49 @@ pub enum OffsetError {
     EdgeError(EdgeError),
 }
 
-/// Arcs around corners are made of 5 segments by default.
-pub const DEFAULT_ARC_SEGMENTS: u32 = 5;
+/// Resolution of arcs generated around corners for positive offsets.
+///
+/// ```
+/// # use geo_offset::ArcResolution;
+/// // The default resolution is 5 segments.
+/// let resolution: ArcResolution<f32> = Default::default();
+/// assert_eq!(resolution, ArcResolution::SegmentCount(5));
+/// ```
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum ArcResolution<F: CoordFloat> {
+    /// Sets the exact number of arc segments to be generated.
+    SegmentCount(usize),
+    /// Sets the desired segment length, so that the number of segments is chosen based on the length of the arc.
+    SegmentLength(F),
+}
+
+impl<F: CoordFloat> Default for ArcResolution<F> {
+    fn default() -> Self {
+        Self::SegmentCount(5)
+    }
+}
 
 pub trait Offset<F: CoordFloat> {
     fn offset(&self, distance: F) -> Result<geo_types::MultiPolygon<F>, OffsetError> {
-        self.offset_with_arc_segments(distance, DEFAULT_ARC_SEGMENTS)
+        self.offset_with_arc_resolution(distance, Default::default())
     }
 
-    fn offset_with_arc_segments(
+    fn offset_with_arc_resolution(
         &self,
         distance: F,
-        arc_segments: u32,
+        arc_resolution: ArcResolution<F>,
     ) -> Result<geo_types::MultiPolygon<F>, OffsetError>;
 }
 
 impl<F: CoordFloat> Offset<F> for geo_types::GeometryCollection<F> {
-    fn offset_with_arc_segments(
+    fn offset_with_arc_resolution(
         &self,
         distance: F,
-        arc_segments: u32,
+        arc_resolution: ArcResolution<F>,
     ) -> Result<geo_types::MultiPolygon<F>, OffsetError> {
         let mut geometry_collection_with_offset = geo_types::MultiPolygon::<F>(Vec::new());
         for geometry in self.0.iter() {
-            let geometry_with_offset = geometry.offset_with_arc_segments(distance, arc_segments)?;
+            let geometry_with_offset = geometry.offset_with_arc_resolution(distance, arc_resolution)?;
             geometry_collection_with_offset = geometry_collection_with_offset
                 .union(&geometry_with_offset, F::from(1000.0).unwrap());
         }
@@ -41,55 +60,55 @@ impl<F: CoordFloat> Offset<F> for geo_types::GeometryCollection<F> {
 }
 
 impl<F: CoordFloat> Offset<F> for geo_types::Geometry<F> {
-    fn offset_with_arc_segments(
+    fn offset_with_arc_resolution(
         &self,
         distance: F,
-        arc_segments: u32,
+        arc_resolution: ArcResolution<F>,
     ) -> Result<geo_types::MultiPolygon<F>, OffsetError> {
         match self {
             geo_types::Geometry::Point(point) => {
-                point.offset_with_arc_segments(distance, arc_segments)
+                point.offset_with_arc_resolution(distance, arc_resolution)
             }
             geo_types::Geometry::Line(line) => {
-                line.offset_with_arc_segments(distance, arc_segments)
+                line.offset_with_arc_resolution(distance, arc_resolution)
             }
             geo_types::Geometry::LineString(line_tring) => {
-                line_tring.offset_with_arc_segments(distance, arc_segments)
+                line_tring.offset_with_arc_resolution(distance, arc_resolution)
             }
             geo_types::Geometry::Triangle(triangle) => triangle
                 .to_polygon()
-                .offset_with_arc_segments(distance, arc_segments),
+                .offset_with_arc_resolution(distance, arc_resolution),
             geo_types::Geometry::Rect(rect) => rect
                 .to_polygon()
-                .offset_with_arc_segments(distance, arc_segments),
+                .offset_with_arc_resolution(distance, arc_resolution),
             geo_types::Geometry::Polygon(polygon) => {
-                polygon.offset_with_arc_segments(distance, arc_segments)
+                polygon.offset_with_arc_resolution(distance, arc_resolution)
             }
             geo_types::Geometry::MultiPoint(multi_point) => {
-                multi_point.offset_with_arc_segments(distance, arc_segments)
+                multi_point.offset_with_arc_resolution(distance, arc_resolution)
             }
             geo_types::Geometry::MultiLineString(multi_line_string) => {
-                multi_line_string.offset_with_arc_segments(distance, arc_segments)
+                multi_line_string.offset_with_arc_resolution(distance, arc_resolution)
             }
             geo_types::Geometry::MultiPolygon(multi_polygon) => {
-                multi_polygon.offset_with_arc_segments(distance, arc_segments)
+                multi_polygon.offset_with_arc_resolution(distance, arc_resolution)
             }
             geo_types::Geometry::GeometryCollection(geometry_collection) => {
-                geometry_collection.offset_with_arc_segments(distance, arc_segments)
+                geometry_collection.offset_with_arc_resolution(distance, arc_resolution)
             }
         }
     }
 }
 
 impl<F: CoordFloat> Offset<F> for geo_types::MultiPolygon<F> {
-    fn offset_with_arc_segments(
+    fn offset_with_arc_resolution(
         &self,
         distance: F,
-        arc_segments: u32,
+        arc_resolution: ArcResolution<F>,
     ) -> Result<geo_types::MultiPolygon<F>, OffsetError> {
         let mut polygons = geo_types::MultiPolygon::<F>(Vec::new());
         for polygon in self.0.iter() {
-            let polygon_with_offset = polygon.offset_with_arc_segments(distance, arc_segments)?;
+            let polygon_with_offset = polygon.offset_with_arc_resolution(distance, arc_resolution)?;
             polygons = polygons.union(&polygon_with_offset, F::from(1000.0).unwrap());
         }
         Ok(polygons)
@@ -97,16 +116,16 @@ impl<F: CoordFloat> Offset<F> for geo_types::MultiPolygon<F> {
 }
 
 impl<F: CoordFloat> Offset<F> for geo_types::Polygon<F> {
-    fn offset_with_arc_segments(
+    fn offset_with_arc_resolution(
         &self,
         distance: F,
-        arc_segments: u32,
+        arc_resolution: ArcResolution<F>,
     ) -> Result<geo_types::MultiPolygon<F>, OffsetError> {
         let exterior_with_offset = self
             .exterior()
-            .offset_with_arc_segments(distance.abs(), arc_segments)?;
+            .offset_with_arc_resolution(distance.abs(), arc_resolution)?;
         let interiors_with_offset = geo_types::MultiLineString::<F>(self.interiors().to_vec())
-            .offset_with_arc_segments(distance.abs(), arc_segments)?;
+            .offset_with_arc_resolution(distance.abs(), arc_resolution)?;
 
         Ok(if distance.is_sign_positive() {
             self.union(&exterior_with_offset, F::from(1000.0).unwrap())
@@ -119,10 +138,10 @@ impl<F: CoordFloat> Offset<F> for geo_types::Polygon<F> {
 }
 
 impl<F: CoordFloat> Offset<F> for geo_types::MultiLineString<F> {
-    fn offset_with_arc_segments(
+    fn offset_with_arc_resolution(
         &self,
         distance: F,
-        arc_segments: u32,
+        arc_resolution: ArcResolution<F>,
     ) -> Result<geo_types::MultiPolygon<F>, OffsetError> {
         if distance < F::zero() {
             return Ok(geo_types::MultiPolygon(Vec::new()));
@@ -131,7 +150,7 @@ impl<F: CoordFloat> Offset<F> for geo_types::MultiLineString<F> {
         let mut multi_line_string_with_offset = geo_types::MultiPolygon::<F>(Vec::new());
         for line_string in self.0.iter() {
             let line_string_with_offset =
-                line_string.offset_with_arc_segments(distance, arc_segments)?;
+                line_string.offset_with_arc_resolution(distance, arc_resolution)?;
             multi_line_string_with_offset = multi_line_string_with_offset
                 .union(&line_string_with_offset, F::from(1000.0).unwrap());
         }
@@ -140,10 +159,10 @@ impl<F: CoordFloat> Offset<F> for geo_types::MultiLineString<F> {
 }
 
 impl<F: CoordFloat> Offset<F> for geo_types::LineString<F> {
-    fn offset_with_arc_segments(
+    fn offset_with_arc_resolution(
         &self,
         distance: F,
-        arc_segments: u32,
+        arc_resolution: ArcResolution<F>,
     ) -> Result<geo_types::MultiPolygon<F>, OffsetError> {
         if distance < F::zero() {
             return Ok(geo_types::MultiPolygon(Vec::new()));
@@ -151,7 +170,7 @@ impl<F: CoordFloat> Offset<F> for geo_types::LineString<F> {
 
         let mut line_string_with_offset = geo_types::MultiPolygon::<F>(Vec::new());
         for line in self.lines() {
-            let line_with_offset = line.offset_with_arc_segments(distance, arc_segments)?;
+            let line_with_offset = line.offset_with_arc_resolution(distance, arc_resolution)?;
             line_string_with_offset =
                 line_string_with_offset.union(&line_with_offset, F::from(1000.0).unwrap());
         }
@@ -172,10 +191,10 @@ impl<F: CoordFloat> Offset<F> for geo_types::LineString<F> {
 }
 
 impl<F: CoordFloat> Offset<F> for geo_types::Line<F> {
-    fn offset_with_arc_segments(
+    fn offset_with_arc_resolution(
         &self,
         distance: F,
-        arc_segments: u32,
+        arc_resolution: ArcResolution<F>,
     ) -> Result<geo_types::MultiPolygon<F>, OffsetError> {
         if distance < F::zero() {
             return Ok(geo_types::MultiPolygon(Vec::new()));
@@ -203,7 +222,7 @@ impl<F: CoordFloat> Offset<F> for geo_types::Line<F> {
                     distance,
                     &prev_edge.next,
                     &current_edge.current,
-                    arc_segments,
+                    arc_resolution,
                     true,
                 );
             }
@@ -213,16 +232,16 @@ impl<F: CoordFloat> Offset<F> for geo_types::Line<F> {
                 vec![],
             )]))
         } else {
-            geo_types::Point::from(self.start).offset_with_arc_segments(distance, arc_segments)
+            geo_types::Point::from(self.start).offset_with_arc_resolution(distance, arc_resolution)
         }
     }
 }
 
 impl<F: CoordFloat> Offset<F> for geo_types::MultiPoint<F> {
-    fn offset_with_arc_segments(
+    fn offset_with_arc_resolution(
         &self,
         distance: F,
-        arc_segments: u32,
+        arc_resolution: ArcResolution<F>,
     ) -> Result<geo_types::MultiPolygon<F>, OffsetError> {
         if distance < F::zero() {
             return Ok(geo_types::MultiPolygon(Vec::new()));
@@ -230,7 +249,7 @@ impl<F: CoordFloat> Offset<F> for geo_types::MultiPoint<F> {
 
         let mut multi_point_with_offset = geo_types::MultiPolygon::<F>(Vec::new());
         for point in self.0.iter() {
-            let point_with_offset = point.offset_with_arc_segments(distance, arc_segments)?;
+            let point_with_offset = point.offset_with_arc_resolution(distance, arc_resolution)?;
             multi_point_with_offset =
                 multi_point_with_offset.union(&point_with_offset, F::from(1000.0).unwrap());
         }
@@ -239,26 +258,31 @@ impl<F: CoordFloat> Offset<F> for geo_types::MultiPoint<F> {
 }
 
 impl<F: CoordFloat> Offset<F> for geo_types::Point<F> {
-    fn offset_with_arc_segments(
+    fn offset_with_arc_resolution(
         &self,
         distance: F,
-        arc_segments: u32,
+        arc_resolution: ArcResolution<F>,
     ) -> Result<geo_types::MultiPolygon<F>, OffsetError> {
         if distance < F::zero() {
             return Ok(geo_types::MultiPolygon(Vec::new()));
         }
 
+        let tau = F::from(std::f64::consts::TAU).unwrap();
         let mut angle = F::zero();
 
-        let vertice_count = match arc_segments * 2 {
-            count if count % 2 == 0 => count + 1,
-            count => count,
+        let segment_count = match arc_resolution {
+            ArcResolution::SegmentCount(segment_count) => segment_count,
+            ArcResolution::SegmentLength(segment_length) => {
+                let circumference = tau * distance;
+                (circumference / segment_length).to_usize().unwrap()
+            },
         };
+        let segment_count = segment_count.max(3); // A circle should have at least three sides :)
 
-        let contour = (0..vertice_count)
+        let contour = (0..segment_count)
             .map(|_| {
                 angle =
-                    angle + F::from(2.0 * std::f64::consts::PI / f64::from(vertice_count)).unwrap(); // counter-clockwise
+                    angle + F::from(2.0 * std::f64::consts::PI / segment_count as f64).unwrap(); // counter-clockwise
 
                 geo_types::Coord::from((
                     self.x() + (distance * angle.cos()),
@@ -280,39 +304,41 @@ fn create_arc<F: CoordFloat>(
     radius: F,
     start_vertex: &geo_types::Coord<F>,
     end_vertex: &geo_types::Coord<F>,
-    segment_count: u32,
+    arc_resolution: ArcResolution<F>,
     outwards: bool,
 ) {
-    let pi2 = F::from(std::f64::consts::PI * 2.0).unwrap();
+    let tau = F::from(std::f64::consts::TAU).unwrap();
 
     let start_angle = (start_vertex.y - center.y).atan2(start_vertex.x - center.x);
     let start_angle = if start_angle.is_sign_negative() {
-        start_angle + pi2
+        start_angle + tau
     } else {
         start_angle
     };
 
     let end_angle = (end_vertex.y - center.y).atan2(end_vertex.x - center.x);
     let end_angle = if end_angle.is_sign_negative() {
-        end_angle + pi2
+        end_angle + tau
     } else {
         end_angle
-    };
-
-    let segment_count = if segment_count % 2 == 0 {
-        segment_count - 1
-    } else {
-        segment_count
     };
 
     let angle = if start_angle > end_angle {
         start_angle - end_angle
     } else {
-        start_angle + pi2 - end_angle
+        start_angle + tau - end_angle
+    };
+
+    let segment_count = match arc_resolution {
+        ArcResolution::SegmentCount(segment_count) => segment_count,
+        ArcResolution::SegmentLength(segment_length) => {
+            let arc_length = angle * radius;
+            (arc_length / segment_length).to_usize().unwrap()
+        },
     };
 
     let segment_angle =
-        if outwards { -angle } else { pi2 - angle } / F::from(segment_count).unwrap();
+        if outwards { -angle } else { tau - angle } / F::from(segment_count).unwrap();
 
     vertices.push(*start_vertex);
     for i in 1..segment_count {
