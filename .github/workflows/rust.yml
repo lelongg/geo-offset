@@ -7,13 +7,51 @@ on:
     branches: [ master ]
 
 jobs:
+
   build:
 
     runs-on: ubuntu-latest
+    name: Build and Test
 
     steps:
-    - uses: actions/checkout@v2
+
+    - name: Checkout code and submodules
+      uses: actions/checkout@v4
+
+    - name: Rust/Cargo Cache
+      uses: Swatinem/rust-cache@v2
+
     - name: Build
-      run: cargo build --verbose
+      run: cargo build
+
     - name: Run tests
       run: cargo test --verbose
+
+  coverage:
+
+    name: Coverage report and security audit
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code and submodules
+      uses: actions/checkout@v4
+
+    - name: Rust/Cargo Cache
+      uses: Swatinem/rust-cache@v2
+
+    - name: Generate coverage report
+      run: |
+        cargo install cargo-tarpaulin
+        cargo tarpaulin --out Xml
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./cobertura.xml
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+    - name: rust-audit-check
+      uses: rustsec/audit-check@v1.4.1
+      with:
+          token: ${{ secrets.GITHUB_TOKEN }}

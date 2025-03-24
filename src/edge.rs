@@ -57,6 +57,7 @@ impl<F: CoordFloat> Edge<F> {
         Self::new_with_offset(&self.next, &self.current, dx, dy)
     }
 
+    /// Constructs a new `Self` with the current and next flipped
     pub fn inverse(&self) -> Self {
         Self::new(&self.next, &self.current)
     }

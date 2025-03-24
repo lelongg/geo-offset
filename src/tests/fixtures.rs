@@ -2,7 +2,7 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
-pub static POLYGONE_POLYLINE: Lazy<geo_types::GeometryCollection<f64>> = Lazy::new(|| {
+pub static POLYGON_POLYLINE: Lazy<geo_types::GeometryCollection<f64>> = Lazy::new(|| {
     let data = include_str!("fixtures/polygon_polyline.json");
     let feature_collection: FeatureCollection = serde_json::from_str(&data).unwrap();
     feature_collection.into()
