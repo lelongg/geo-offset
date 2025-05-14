@@ -268,7 +268,7 @@ impl<F: CoordFloat> Offset<F> for geo_types::Point<F> {
         }
 
         let tau = F::from(std::f64::consts::TAU).unwrap();
-        let mut angle = F::zero();
+        // let mut angle = F::zero();
 
         let segment_count = match arc_resolution {
             ArcResolution::SegmentCount(segment_count) => segment_count,
@@ -278,21 +278,22 @@ impl<F: CoordFloat> Offset<F> for geo_types::Point<F> {
             },
         };
         let segment_count = segment_count.max(3); // A circle should have at least three sides :)
+        let segment_angle = F::from(2.0 * std::f64::consts::PI / segment_count as f64).unwrap(); // counter-clockwise;
+        let (rot_sin, rot_cos) = segment_angle.sin_cos();
 
-        let contour = (0..segment_count)
-            .map(|_| {
-                angle =
-                    angle + F::from(2.0 * std::f64::consts::PI / segment_count as f64).unwrap(); // counter-clockwise
+        let mut contour = Vec::with_capacity(segment_count);
+        let mut displace = geo_types::Coord { x: distance, y: F::zero() };
 
-                geo_types::Coord::from((
-                    self.x() + (distance * angle.cos()),
-                    self.y() + (distance * angle.sin()),
-                ))
-            })
-            .collect();
+        for _ in 0..segment_count {
+            contour.push(self.0 + displace);
+            displace = geo_types::Coord {
+                x: displace.x * rot_cos - displace.y * rot_sin,
+                y: displace.x * rot_sin + displace.y * rot_cos,
+            };
+        }
 
         Ok(geo_types::MultiPolygon(vec![geo_types::Polygon::new(
-            contour,
+            contour.into(),
             Vec::new(),
         )]))
     }
@@ -340,13 +341,20 @@ fn create_arc<F: CoordFloat>(
     let segment_angle =
         if outwards { -angle } else { tau - angle } / F::from(segment_count).unwrap();
 
-    vertices.push(*start_vertex);
-    for i in 1..segment_count {
-        let angle = start_angle + segment_angle * F::from(i).unwrap();
-        vertices.push(geo_types::Coord::from((
-            center.x + angle.cos() * radius,
-            center.y + angle.sin() * radius,
-        )));
+    let mut displace = geo_types::Coord {
+        x: radius * start_angle.cos(),
+        y: radius * start_angle.sin(),
+    };
+
+    let (rot_sin, rot_cos) = segment_angle.sin_cos();
+
+    for _ in 0..segment_count {
+        vertices.push(*center + displace);
+        displace = geo_types::Coord {
+            x: displace.x * rot_cos - displace.y * rot_sin,
+            y: displace.x * rot_sin + displace.y * rot_cos,
+        };
     }
+
     vertices.push(*end_vertex);
 }
