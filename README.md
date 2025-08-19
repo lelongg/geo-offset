@@ -26,3 +26,10 @@ let line_with_offset = line.offset(2.0)?;
 
 [`Offset`]: offset/trait.Offset.html
 [`offset`]: offset/trait.Offset.html#method.offset
+
+## Development
+
+### Benchmarking
+
+The crate uses [`criterion`](https://crates.io/crates/criterion) for benchmarking.
+Run `cargo bench` to run the benchmarks.
